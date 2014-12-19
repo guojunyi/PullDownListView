@@ -1,6 +1,5 @@
 PullDownListView
 ================
-
-![View Screenshot](https://github.com/guojunyi/PullDownListView/tree/master/PullDownListView/screenshot/aaa.gif)
+![](https://raw.githubusercontent.com/guojunyi/PullDownListView/master/screenshot/1.gif)
 
 
