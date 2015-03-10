@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
@@ -17,11 +18,11 @@ import android.widget.AbsListView.OnScrollListener;
 
 public class PullDownListView extends RelativeLayout implements
 		OnScrollListener {
-	public static final int MAX_PULL_TOP_HEIGHT = 175;
-	public static final int MAX_PULL_BOTTOM_HEIGHT = 175;
+	static int MAX_PULL_TOP_HEIGHT;
+	static int MAX_PULL_BOTTOM_HEIGHT;
 	
-	public static final int REFRESHING_TOP_HEIGHT = 150;
-	public static final int REFRESHING_BOTTOM_HEIGHT = 150;
+	static int REFRESHING_TOP_HEIGHT;
+	static int REFRESHING_BOTTOM_HEIGHT;
 
 	private boolean isTop;
 	private boolean isBottom;
@@ -233,8 +234,23 @@ public class PullDownListView extends RelativeLayout implements
 		animator.start();
 	}
 
+	
+	@Override 
+	public void onMeasure(int widthMeasureSpec,int heightMeasureSpec){
+		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+		
+		REFRESHING_TOP_HEIGHT = layoutHeader.getMeasuredHeight();
+		REFRESHING_BOTTOM_HEIGHT = layoutFooter.getMeasuredHeight();
+		
+		int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 38,this.getResources().getDisplayMetrics());
+		MAX_PULL_TOP_HEIGHT = REFRESHING_TOP_HEIGHT + value;
+		MAX_PULL_BOTTOM_HEIGHT = REFRESHING_BOTTOM_HEIGHT + value;
+	}
+	
 	@Override
 	public void onFinishInflate() {
+		
+		
 		mListView.setBackgroundColor(0xffffffff);
 		mListView.setCacheColorHint(Color.TRANSPARENT);
 		mListView.setVerticalScrollBarEnabled(false);
@@ -245,6 +261,8 @@ public class PullDownListView extends RelativeLayout implements
 
 		layoutHeader = (RelativeLayout) this.findViewById(R.id.layoutHeader);
 		layoutFooter = (RelativeLayout) this.findViewById(R.id.layoutFooter);
+		
+		
 		super.onFinishInflate();
 	}
 

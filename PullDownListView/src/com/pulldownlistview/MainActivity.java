@@ -7,6 +7,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -135,7 +136,7 @@ public class MainActivity extends Activity {
 		public View getView(int position, View convertView, ViewGroup parent) {
 			// TODO Auto-generated method stub
 			TextView textView = new TextView(mContext);
-			textView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT,80));
+			textView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT,dp2px(mContext,60)));
 			textView.setText(adapterData[position]);
 			textView.setTextSize(20);
 			textView.setTextColor(0xff000000);
@@ -145,4 +146,9 @@ public class MainActivity extends Activity {
 		}
 		
 	};
+	
+	public static int dp2px(Context context, int dp) {
+		return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+				context.getResources().getDisplayMetrics());
+	}
 }
