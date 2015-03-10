@@ -17,8 +17,8 @@ import android.widget.AbsListView.OnScrollListener;
 
 public class PullDownListView extends RelativeLayout implements
 		OnScrollListener {
-	public static final int MAX_PULL_TOP_HEIGHT = 200;
-	public static final int MAX_PULL_BOTTOM_HEIGHT = 200;
+	public static final int MAX_PULL_TOP_HEIGHT = 175;
+	public static final int MAX_PULL_BOTTOM_HEIGHT = 175;
 	
 	public static final int REFRESHING_TOP_HEIGHT = 150;
 	public static final int REFRESHING_BOTTOM_HEIGHT = 150;
@@ -235,8 +235,9 @@ public class PullDownListView extends RelativeLayout implements
 
 	@Override
 	public void onFinishInflate() {
-		mListView.setBackgroundColor(Color.WHITE);
+		mListView.setBackgroundColor(0xffffffff);
 		mListView.setCacheColorHint(Color.TRANSPARENT);
+		mListView.setVerticalScrollBarEnabled(false);
 		mListView.setLayoutParams(new RelativeLayout.LayoutParams(
 				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mListView.setOnScrollListener(this);

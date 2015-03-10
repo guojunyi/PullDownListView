@@ -14,7 +14,9 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
-            android:label="PullDownListView">
+            android:label="PullDownListView"
+            android:theme="@android:style/Theme.NoTitleBar"
+            >
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

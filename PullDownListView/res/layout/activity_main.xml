@@ -2,7 +2,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
-
+	<TextView 
+	    android:layout_width="match_parent"
+	    android:layout_height="46dp"
+	    android:background="#1565c0"
+	    android:text="PullDownListView"
+	    android:gravity="left|center_vertical"
+	    android:paddingLeft="10dp"
+	    android:textColor="#fff"
+	    />
     <com.pulldownlistview.PullDownListView
         android:id="@+id/pullDownListView"
         android:layout_width="match_parent"

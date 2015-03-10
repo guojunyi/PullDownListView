@@ -3,36 +3,62 @@ package com.pulldownlistview;
 import com.pulldownlistview.PullDownListView.OnPullHeightChangeListener;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 	final String TAG = "MainActivity";
-
+	static String[] adapterData = new String[] { "A", "B", "C", "D", "E", "F",
+		"G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+		"S", "T", "U", "V", "W", "X", "Y", "Z" };
+	Context mContext;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
+		mContext = this;
 		final PullDownListView pullDownListView = (PullDownListView) this
 				.findViewById(R.id.pullDownListView);
 		final YProgressView progressView = (YProgressView) this
 				.findViewById(R.id.progressView);
 		final EyeView eyeView = (EyeView) this.findViewById(R.id.eyeView);
-		String[] adapterData = new String[] { "A", "B", "C", "D", "E", "F",
-				"G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
-				"S", "T", "U", "V", "W", "X", "Y", "Z" };
 
-		pullDownListView.getListView().setAdapter(
-				new ArrayAdapter<String>(this,
-						android.R.layout.simple_list_item_1, adapterData));
+		pullDownListView.getListView().setAdapter(mAdapter);
+		
+		pullDownListView.setOnPullHeightChangeListener(new OnPullHeightChangeListener(){
 
+			@Override
+			public void onTopHeightChange(int headerHeight, int pullHeight) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onBottomHeightChange(int footerHeight, int pullHeight) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onRefreshing(boolean isTop) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
 		pullDownListView
 				.setOnPullHeightChangeListener(new OnPullHeightChangeListener() {
 
@@ -106,4 +132,39 @@ public class MainActivity extends Activity {
 				});
 
 	}
+	
+	private BaseAdapter mAdapter = new BaseAdapter(){
+
+		@Override
+		public int getCount() {
+			// TODO Auto-generated method stub
+			return adapterData.length;
+		}
+
+		@Override
+		public Object getItem(int position) {
+			// TODO Auto-generated method stub
+			return adapterData[position];
+		}
+
+		@Override
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+		
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			TextView textView = new TextView(mContext);
+			textView.setLayoutParams(new AbsListView.LayoutParams(LayoutParams.MATCH_PARENT,80));
+			textView.setText(adapterData[position]);
+			textView.setTextSize(20);
+			textView.setTextColor(0xff000000);
+			textView.setGravity(Gravity.LEFT|Gravity.CENTER_VERTICAL);
+			textView.setPadding(50, 0, 0, 0);
+			return textView;
+		}
+		
+	};
 }
