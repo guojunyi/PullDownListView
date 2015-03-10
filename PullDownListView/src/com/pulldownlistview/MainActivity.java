@@ -41,83 +41,61 @@ public class MainActivity extends Activity {
 		pullDownListView.setOnPullHeightChangeListener(new OnPullHeightChangeListener(){
 
 			@Override
-			public void onTopHeightChange(int headerHeight, int pullHeight) {
+			public void onTopHeightChange(int headerHeight,
+					int pullHeight) {
 				// TODO Auto-generated method stub
-				
+				float progress = (float) pullHeight
+						/ (float) headerHeight - 0.2f;
+				if (progress > 1.0f) {
+					progress = 1.0f;
+				}
+
+				if (!pullDownListView.isRefreshing()) {
+					eyeView.setProgress(progress);
+				}
 			}
 
 			@Override
-			public void onBottomHeightChange(int footerHeight, int pullHeight) {
+			public void onBottomHeightChange(int footerHeight,
+					int pullHeight) {
 				// TODO Auto-generated method stub
-				
+				float progress = (float) pullHeight
+						/ (float) footerHeight - 0.2f;
+				if (progress > 1.0f) {
+					progress = 1.0f;
+				}
+				if (!pullDownListView.isRefreshing()) {
+					progressView.setProgress(progress);
+				}
+
 			}
 
 			@Override
-			public void onRefreshing(boolean isTop) {
+			public void onRefreshing(final boolean isTop) {
 				// TODO Auto-generated method stub
-				
+				if (isTop) {
+					eyeView.startAnimate();
+				} else {
+					progressView.startAnimate();
+				}
+
+				new Handler().postDelayed(new Runnable() {
+
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						pullDownListView.pullUp();
+						if (isTop) {
+							eyeView.stopAnimate();
+						} else {
+							progressView.stopAnimate();
+						}
+					}
+
+				}, 3000);
 			}
 			
 		});
-		pullDownListView
-				.setOnPullHeightChangeListener(new OnPullHeightChangeListener() {
-
-					@Override
-					public void onTopHeightChange(int headerHeight,
-							int pullHeight) {
-						// TODO Auto-generated method stub
-						float progress = (float) pullHeight
-								/ (float) headerHeight - 0.2f;
-						if (progress > 1.0f) {
-							progress = 1.0f;
-						}
-
-						if (!pullDownListView.isRefreshing()) {
-							eyeView.setProgress(progress);
-						}
-					}
-
-					@Override
-					public void onBottomHeightChange(int footerHeight,
-							int pullHeight) {
-						// TODO Auto-generated method stub
-						float progress = (float) pullHeight
-								/ (float) footerHeight - 0.2f;
-						if (progress > 1.0f) {
-							progress = 1.0f;
-						}
-						if (!pullDownListView.isRefreshing()) {
-							progressView.setProgress(progress);
-						}
-
-					}
-
-					@Override
-					public void onRefreshing(final boolean isTop) {
-						// TODO Auto-generated method stub
-						if (isTop) {
-							eyeView.startAnimate();
-						} else {
-							progressView.startAnimate();
-						}
-
-						new Handler().postDelayed(new Runnable() {
-
-							@Override
-							public void run() {
-								// TODO Auto-generated method stub
-								pullDownListView.pullUp();
-								if (isTop) {
-									eyeView.stopAnimate();
-								} else {
-									progressView.stopAnimate();
-								}
-							}
-
-						}, 3000);
-					}
-
-				});
 
 		pullDownListView.getListView().setOnItemClickListener(
 				new OnItemClickListener() {
