@@ -2,7 +2,7 @@ PullDownListView
 ================
 ![](https://raw.githubusercontent.com/guojunyi/PullDownListView/master/screenshot/1.gif)
 ## Sample Application
-<a href="https://play.google.com/store/apps/details?id=cn.trinea.android.demo" target="_blank" title="Download From Google Play">Click to Download the simple apk</a>
+<a href="https://raw.githubusercontent.com/guojunyi/PullDownListView/master/apk/PullDownListView.apk" target="_blank" title="Download From Google Play">Click to Download the simple apk</a>
 
 ## Usage
 ``` java
