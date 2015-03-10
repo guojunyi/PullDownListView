@@ -11,36 +11,38 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.AbsListView.OnScrollListener;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.RelativeLayout.LayoutParams;
 
 public class PullDownListView extends RelativeLayout implements
 		OnScrollListener {
-	public static final int MAX_PULL_TOP_HEIGHT = 300; 
-	public static final int MAX_PULL_BOTTOM_HEIGHT = 300;
-	public static final float REFRESHING_PROGRESS_TOP = 1.2f; 
-	public static final float REFRESHING_PROGRESS_BOTTOM = 1.2f;
+	public static final int MAX_PULL_TOP_HEIGHT = 200;
+	public static final int MAX_PULL_BOTTOM_HEIGHT = 200;
+	
+	public static final int REFRESHING_TOP_HEIGHT = 150;
+	public static final int REFRESHING_BOTTOM_HEIGHT = 150;
+
 	private boolean isTop;
 	private boolean isBottom;
 	private boolean isRefreshing;
 	private boolean isAnimation;
-	
+
 	RelativeLayout layoutHeader;
 	RelativeLayout layoutFooter;
-	Handler mHandler = new Handler();
-	
-	float progressTop;
-	float progressBottom;
-	
+
+	private int mCurrentY = 0;
+	boolean pullTag = false;
+	OnScrollListener mOnScrollListener;
 	OnPullHeightChangeListener mOnPullHeightChangeListener;
-	
-	public void setOnPullHeightChangeListener(OnPullHeightChangeListener listener){
+
+	public void setOnPullHeightChangeListener(
+			OnPullHeightChangeListener listener) {
 		this.mOnPullHeightChangeListener = listener;
+	}
+	
+	public void setOnScrollListener(OnScrollListener listener){
+		mOnScrollListener = listener;
 	}
 
 	public PullDownListView(Context context, AttributeSet attrs) {
@@ -48,285 +50,247 @@ public class PullDownListView extends RelativeLayout implements
 		// TODO Auto-generated constructor stub
 	}
 
-	public boolean isRefreshing(){
+	public boolean isRefreshing() {
 		return this.isRefreshing;
 	}
-	
+
 	private ListView mListView = new ListView(getContext()) {
-		
-		int y = 0;
+
+		int lastY = 0;
 
 		@Override
 		public boolean onTouchEvent(MotionEvent ev) {
-			if (isAnimation||isRefreshing) {
+			if (isAnimation || isRefreshing) {
 				return super.onTouchEvent(ev);
 			}
-			int currentY = (int) ev.getY();
+			RelativeLayout parent = (RelativeLayout) mListView.getParent();
+
+			int currentY = (int) ev.getRawY();
 			switch (ev.getAction()) {
 			case MotionEvent.ACTION_DOWN:
-				y = (int) ev.getY();
+				lastY = (int) ev.getRawY();
 				break;
-			case MotionEvent.ACTION_MOVE:
-			{
-				RelativeLayout parent = (RelativeLayout) mListView.getParent();
-				int step = (int) (currentY - y) * 3 / 5;
-				y = currentY;
+			case MotionEvent.ACTION_MOVE: {
+				boolean isToBottom = currentY - lastY >= 0 ? true : false;
+
+				int step = Math.abs(currentY - lastY);
+				lastY = currentY;
+
 				if (isTop && mListView.getTop() >= 0) {
-					if (step > 0 && mListView.getTop() <= MAX_PULL_TOP_HEIGHT) {
+
+					if (isToBottom && mListView.getTop() <= MAX_PULL_TOP_HEIGHT) {
+						MotionEvent event = MotionEvent.obtain(ev);
+						ev.setAction(MotionEvent.ACTION_UP);
+						super.onTouchEvent(ev);
+						pullTag = true;
 						if ((mListView.getTop() + step) > MAX_PULL_TOP_HEIGHT) {
-							mListView.layout(mListView.getLeft(), MAX_PULL_TOP_HEIGHT,
-									mListView.getRight(), parent.getHeight()
-											+ MAX_PULL_TOP_HEIGHT);
+							mCurrentY = MAX_PULL_TOP_HEIGHT;
+							scrollTopTo(mCurrentY);
 						} else {
-							mListView.layout(mListView.getLeft(),
-									mListView.getTop() + step,
-									mListView.getRight(), mListView.getBottom()
-											+ step);
+							mCurrentY += step;
+							scrollTopTo(mCurrentY);
 						}
+					} else if (!isToBottom && mListView.getTop() > 0) {
 						MotionEvent event = MotionEvent.obtain(ev);
 						ev.setAction(MotionEvent.ACTION_UP);
-						
 						super.onTouchEvent(ev);
-						
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onTopHeightChange(layoutHeader.getHeight(), mListView.getTop());
-						}
-						onProgressTopChange();
-					} else if (step < 0 && mListView.getTop() > 0) {
-						if ((mListView.getTop() + step) < 0) {
-							
-							mListView.layout(mListView.getLeft(), 0,
-									mListView.getRight(), parent.getHeight());
+						if ((mListView.getTop() - step) < 0) {
+							mCurrentY = 0;
+							scrollTopTo(mCurrentY);
 						} else {
-							mListView.layout(mListView.getLeft(),
-									mListView.getTop() + step,
-									mListView.getRight(), mListView.getBottom()
-											+ step);
+							mCurrentY -= step;
+							scrollTopTo(mCurrentY);
 						}
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onTopHeightChange(layoutHeader.getHeight(), mListView.getTop());
+					} else if (!isToBottom && mListView.getTop() == 0) {
+						if (!pullTag) {
+							return super.onTouchEvent(ev);
 						}
-						onProgressTopChange();
-					} else if (step < 0 && mListView.getTop() == 0) {
-						return super.onTouchEvent(ev);
+
 					}
 
 					return true;
-				}else if(isBottom&&mListView.getBottom()<=parent.getHeight()){
-					step = -step;
-					if (step > 0 && mListView.getBottom() >= (parent.getHeight()-MAX_PULL_BOTTOM_HEIGHT)) {
+				} else if (isBottom
+						&& mListView.getBottom() <= parent.getHeight()) {
+					if (!isToBottom && (parent.getHeight()-mListView.getBottom())<=MAX_PULL_BOTTOM_HEIGHT) {
+						MotionEvent event = MotionEvent.obtain(ev);
+						ev.setAction(MotionEvent.ACTION_UP);
+						super.onTouchEvent(ev);
+						pullTag = true;
 						if ((mListView.getBottom() - step) < (parent.getHeight()-MAX_PULL_BOTTOM_HEIGHT)) {
-							mListView.layout(mListView.getLeft(), -MAX_PULL_BOTTOM_HEIGHT,
-									mListView.getRight(), parent.getHeight()
-											- MAX_PULL_BOTTOM_HEIGHT);
+							mCurrentY = -MAX_PULL_BOTTOM_HEIGHT;
+							scrollBottomTo(mCurrentY);
 						} else {
-							mListView.layout(mListView.getLeft(),
-									mListView.getTop() - step,
-									mListView.getRight(), mListView.getBottom()
-											- step);
+							mCurrentY -= step;
+							scrollBottomTo(mCurrentY);
 						}
-						MotionEvent event = MotionEvent.obtain(ev);
-						ev.setAction(MotionEvent.ACTION_UP);
-						
-						super.onTouchEvent(ev);
-						
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onBottomHeightChange(layoutHeader.getHeight(), parent.getHeight()-mListView.getBottom());
-						}
-						onProgressBottomChange();
-					} else if (step < 0 && mListView.getBottom() < parent.getHeight()) {
-						if ((mListView.getBottom() - step) > parent.getHeight()) {
-							
-							mListView.layout(mListView.getLeft(), 0,
-									mListView.getRight(), parent.getHeight());
+					}else if(isToBottom&&(mListView.getBottom()<parent.getHeight())){
+						if ((mListView.getBottom() + step) > parent.getHeight()) {
+							mCurrentY = 0;
+							scrollBottomTo(mCurrentY);
 						} else {
-							mListView.layout(mListView.getLeft(),
-									mListView.getTop() - step,
-									mListView.getRight(), mListView.getBottom()
-											- step);
+							mCurrentY += step;
+							scrollBottomTo(mCurrentY);
 						}
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onBottomHeightChange(layoutHeader.getHeight(), parent.getHeight()-mListView.getBottom());
+					}else if(isToBottom&&mListView.getBottom()==parent.getHeight()){
+						if (!pullTag) {
+							return super.onTouchEvent(ev);
 						}
-						onProgressBottomChange();
-					} else if (step < 0 && mListView.getTop() == 0) {
-						return super.onTouchEvent(ev);
 					}
-
 					return true;
 				}
+				break;
 			}
-				
+			case MotionEvent.ACTION_CANCEL:
 			case MotionEvent.ACTION_UP:
-			{
-				RelativeLayout parent = (RelativeLayout) mListView.getParent();
-				if(mListView.getTop()>0){
-					if (progressTop>=REFRESHING_PROGRESS_TOP) {
+				pullTag = false;
+
+				if (mListView.getTop() > 0) {
+					if (mListView.getTop() > REFRESHING_TOP_HEIGHT) {
+						animateTopTo(layoutHeader.getMeasuredHeight());
 						isRefreshing = true;
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onRefreshing();
+						if (null != mOnPullHeightChangeListener) {
+							mOnPullHeightChangeListener.onRefreshing(true);
 						}
-						scrollTopTo(layoutHeader.getHeight(),300);
 					} else {
-						if (mListView.getTop() > 0) {
-							scrollTopTo(0,300);
-						}
+						animateTopTo(0);
 					}
-				}else if(mListView.getBottom()<parent.getHeight()){
-					if (progressBottom>=REFRESHING_PROGRESS_BOTTOM) {
+					
+				} else if (mListView.getBottom() < parent.getHeight()) {
+					if ((parent.getHeight()-mListView.getBottom()) > REFRESHING_BOTTOM_HEIGHT) {
+						animateBottomTo(-layoutFooter.getMeasuredHeight());
 						isRefreshing = true;
-						if(null!=mOnPullHeightChangeListener){
-							mOnPullHeightChangeListener.onRefreshing();
+						if (null != mOnPullHeightChangeListener) {
+							mOnPullHeightChangeListener.onRefreshing(false);
 						}
-						scrollBottomTo(parent.getHeight()-layoutFooter.getHeight(),300);
 					} else {
-						if (mListView.getBottom() < parent.getHeight()) {
-							scrollBottomTo(parent.getHeight(),300);
-						}
+						animateBottomTo(0);
 					}
 				}
-			}
-
-				break;
 
 			}
 
+			
 			return super.onTouchEvent(ev);
 		}
 
 	};
 
-	@Override 
-	public void onFinishInflate(){
+	public void scrollBottomTo(int y) {
+		mListView.layout(mListView.getLeft(), y, mListView.getRight(),
+				this.getMeasuredHeight()+y);
+		if (null != mOnPullHeightChangeListener) {
+			mOnPullHeightChangeListener.onBottomHeightChange(
+					layoutHeader.getHeight(), -y);
+		}
+	}
+	
+	public void animateBottomTo(final int y) {
+		ValueAnimator animator = ValueAnimator.ofInt(mListView.getBottom()-this.getMeasuredHeight(), y);
+		animator.setDuration(300);
+		animator.addUpdateListener(new AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				// TODO Auto-generated method stub
+				int frameValue = (Integer) animation.getAnimatedValue();
+				mCurrentY = frameValue;
+				scrollBottomTo(frameValue);
+				if (frameValue == y) {
+					isAnimation = false;
+				}
+			}
+		});
+		isAnimation = true;
+		animator.start();
+	}
+	
+	public void scrollTopTo(int y) {
+		mListView.layout(mListView.getLeft(), y, mListView.getRight(),
+				this.getMeasuredHeight()+y);
+		if (null != mOnPullHeightChangeListener) {
+			mOnPullHeightChangeListener.onTopHeightChange(
+					layoutHeader.getHeight(), y);
+		}
+	}
+	
+	
+
+	public void animateTopTo(final int y) {
+		ValueAnimator animator = ValueAnimator.ofInt(mListView.getTop(), y);
+		animator.setDuration(300);
+		animator.addUpdateListener(new AnimatorUpdateListener() {
+			@Override
+			public void onAnimationUpdate(ValueAnimator animation) {
+				// TODO Auto-generated method stub
+				int frameValue = (Integer) animation.getAnimatedValue();
+				mCurrentY = frameValue;
+				scrollTopTo(frameValue);
+				if (frameValue == y) {
+					isAnimation = false;
+				}
+			}
+		});
+		isAnimation = true;
+		animator.start();
+	}
+
+	@Override
+	public void onFinishInflate() {
 		mListView.setBackgroundColor(Color.WHITE);
 		mListView.setCacheColorHint(Color.TRANSPARENT);
-		mListView.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT));
+		mListView.setLayoutParams(new RelativeLayout.LayoutParams(
+				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 		mListView.setOnScrollListener(this);
 		this.addView(mListView);
-		
+
 		layoutHeader = (RelativeLayout) this.findViewById(R.id.layoutHeader);
 		layoutFooter = (RelativeLayout) this.findViewById(R.id.layoutFooter);
 		super.onFinishInflate();
 	}
-	
-	
-	private void scrollTopTo(final int y,int duration){
-		if(isAnimation){
-			return;
-		}
-		
-		ValueAnimator animator = ValueAnimator.ofInt(
-				mListView.getTop(), y);
-		animator.setDuration(duration);
-		animator.addUpdateListener(new AnimatorUpdateListener() {
 
-			@Override
-			public void onAnimationUpdate(
-					ValueAnimator animation) {
-				// TODO Auto-generated method stub
-				int frameValue = (Integer) animation
-						.getAnimatedValue();
-				RelativeLayout parent = (RelativeLayout) mListView
-						.getParent();
-				mListView.layout(mListView.getLeft(),
-						frameValue, mListView.getRight(),
-						parent.getHeight());
-				if(null!=mOnPullHeightChangeListener){
-					mOnPullHeightChangeListener.onTopHeightChange(layoutHeader.getHeight(), frameValue);
-				}
-				onProgressTopChange();
-				if (frameValue == y) {
-					isAnimation = false;
-				}
-			}
-
-		});
-		isAnimation = true;
-		animator.start();
-	}
 	
-	private void scrollBottomTo(final int y,int duration){
-		if(isAnimation){
-			return;
-		}
-		
-		ValueAnimator animator = ValueAnimator.ofInt(
-				mListView.getBottom(), y);
-		animator.setDuration(duration);
-		animator.addUpdateListener(new AnimatorUpdateListener() {
 
-			@Override
-			public void onAnimationUpdate(
-					ValueAnimator animation) {
-				// TODO Auto-generated method stub
-				int frameValue = (Integer) animation
-						.getAnimatedValue();
-				RelativeLayout parent = (RelativeLayout) mListView
-						.getParent();
-				mListView.layout(mListView.getLeft(),
-						frameValue-parent.getHeight(), mListView.getRight(),
-						frameValue);
-				if(null!=mOnPullHeightChangeListener){
-					mOnPullHeightChangeListener.onBottomHeightChange(layoutFooter.getHeight(), parent.getHeight()-frameValue);
-				}
-				onProgressTopChange();
-				if (frameValue == y) {
-					isAnimation = false;
-				}
-			}
-
-		});
-		isAnimation = true;
-		animator.start();
-	}
-	
-	public ListView getListView(){
+	public ListView getListView() {
 		return this.mListView;
 	}
-	
-	public void pullUp(){
+
+	public void pullUp() {
 		isRefreshing = false;
-		if(mListView.getTop()>0){
-			this.scrollTopTo(0, 300);
-		}else if(mListView.getBottom()<this.getHeight()){
-			this.scrollBottomTo(this.getHeight(), 300);
+		if (mListView.getTop() > 0) {
+			animateTopTo(0);
+		} else if (mListView.getBottom() < this.getHeight()) {
+			animateBottomTo(0);
 		}
-		
-		
+
 	}
-	
-	private void onProgressTopChange(){
-		this.progressTop = (float)mListView.getTop()/(float)layoutHeader.getHeight();
-	}
-	
-	private void onProgressBottomChange(){
-		this.progressBottom = ((float)this.getHeight()-(float)mListView.getBottom())/(float)layoutFooter.getHeight();
-	}
-	
+
+
 	@Override
 	public void onScroll(AbsListView view, int firstVisibleItem,
 			int visibleItemCount, int totalItemCount) {
 		// TODO Auto-generated method stub
+		if(null!=mOnScrollListener){
+			mOnScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+		}
 		if (mListView.getCount() > 0) {
-			if((firstVisibleItem+visibleItemCount)==totalItemCount){
-				View lastItem = (View) mListView.getChildAt(visibleItemCount-1);
+			if ((firstVisibleItem + visibleItemCount) == totalItemCount) {
+				View lastItem = (View) mListView
+						.getChildAt(visibleItemCount - 1);
 				if (null != lastItem) {
-					
-					if(lastItem.getBottom()==mListView.getHeight()){
-						Log.e("my",lastItem.getBottom()+"");
+
+					if (lastItem.getBottom() == mListView.getHeight()) {
+						Log.e("my", lastItem.getBottom() + "");
 						isBottom = true;
-					}else{
+					} else {
 						isBottom = false;
 					}
 				}
-			}else{
+			} else {
 				isBottom = false;
 			}
-		}else{
+		} else {
 			isBottom = false;
 		}
-		
-		
+
 		if (mListView.getCount() > 0) {
 			if (firstVisibleItem == 0) {
 				View firstItem = mListView.getChildAt(0);
@@ -349,13 +313,17 @@ public class PullDownListView extends RelativeLayout implements
 	@Override
 	public void onScrollStateChanged(AbsListView view, int scrollState) {
 		// TODO Auto-generated method stub
-
+		if(null!=mOnScrollListener){
+			mOnScrollListener.onScrollStateChanged(view, scrollState);
+		}
 	}
 
-	//listener call back
-	public interface OnPullHeightChangeListener{
-		public void onTopHeightChange(int headerHeight,int pullHeight);
-		public void onBottomHeightChange(int footHeight,int pullHeight);
-		public void onRefreshing();
+	// listener call back
+	public interface OnPullHeightChangeListener {
+		public void onTopHeightChange(int headerHeight, int pullHeight);
+
+		public void onBottomHeightChange(int footerHeight, int pullHeight);
+
+		public void onRefreshing(boolean isTop);
 	}
 }

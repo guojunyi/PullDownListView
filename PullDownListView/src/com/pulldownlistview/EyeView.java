@@ -29,7 +29,8 @@ public class EyeView extends ImageView {
 	public EyeView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		// TODO Auto-generated constructor stub
-		mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		mPaint = new Paint();
+		mPaint.setAntiAlias(true);
 		rotateProgress = 0;
 		progress = 0.0f;
 	}
@@ -44,9 +45,6 @@ public class EyeView extends ImageView {
 			bitmap.recycle();
 
 		}
-
-		// mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_IN));
-
 	}
 	
 
@@ -112,8 +110,6 @@ public class EyeView extends ImageView {
 		temp1.recycle();
 		temp2.recycle();
 		mask.recycle();
-//		origin1.recycle();
-//		origin2.recycle();
 		return bitmap;
 	}
 	
