@@ -76,7 +76,7 @@ public class PullDownListView extends RelativeLayout implements
 
 				int step = Math.abs(currentY - lastY);
 				lastY = currentY;
-
+				
 				if (isTop && mListView.getTop() >= 0) {
 
 					if (isToBottom && mListView.getTop() <= MAX_PULL_TOP_HEIGHT) {
@@ -84,6 +84,10 @@ public class PullDownListView extends RelativeLayout implements
 						ev.setAction(MotionEvent.ACTION_UP);
 						super.onTouchEvent(ev);
 						pullTag = true;
+						
+						if(mListView.getTop()>layoutHeader.getHeight()){
+							step = step/2;
+						}
 						if ((mListView.getTop() + step) > MAX_PULL_TOP_HEIGHT) {
 							mCurrentY = MAX_PULL_TOP_HEIGHT;
 							scrollTopTo(mCurrentY);
@@ -117,6 +121,10 @@ public class PullDownListView extends RelativeLayout implements
 						ev.setAction(MotionEvent.ACTION_UP);
 						super.onTouchEvent(ev);
 						pullTag = true;
+						if(parent.getHeight()-mListView.getBottom()>layoutFooter.getHeight()){
+							step = step/2;
+						}
+						
 						if ((mListView.getBottom() - step) < (parent.getHeight()-MAX_PULL_BOTTOM_HEIGHT)) {
 							mCurrentY = -MAX_PULL_BOTTOM_HEIGHT;
 							scrollBottomTo(mCurrentY);
@@ -242,9 +250,8 @@ public class PullDownListView extends RelativeLayout implements
 		REFRESHING_TOP_HEIGHT = layoutHeader.getMeasuredHeight();
 		REFRESHING_BOTTOM_HEIGHT = layoutFooter.getMeasuredHeight();
 		
-		int value = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 38,this.getResources().getDisplayMetrics());
-		MAX_PULL_TOP_HEIGHT = REFRESHING_TOP_HEIGHT + value;
-		MAX_PULL_BOTTOM_HEIGHT = REFRESHING_BOTTOM_HEIGHT + value;
+		MAX_PULL_TOP_HEIGHT = this.getMeasuredHeight();
+		MAX_PULL_BOTTOM_HEIGHT = this.getMeasuredHeight();
 	}
 	
 	@Override
